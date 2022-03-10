@@ -77,6 +77,7 @@ struct Finder {
   const std::vector<uint8_t> &data;
   std::vector<ssize_t> last;
   std::vector<ssize_t> prev;
+  int searches;
 
   Finder(const std::string &_pattern,
        const std::vector<uint8_t> &_data)
@@ -85,7 +86,8 @@ struct Finder {
   n(pattern.length()),
   data(_data),
   last(256,ssize_t(std::string::npos)),
-  prev(pattern.length(),ssize_t(std::string::npos))
+  prev(pattern.length(),ssize_t(std::string::npos)),
+  searches(0)
   {
     for (ssize_t i=0; i<n; ++i) {
       last[pattern[i]]=i;
@@ -96,6 +98,7 @@ struct Finder {
   }
 
   ssize_t search(ssize_t begin, ssize_t end, ssize_t pos) {
+    ++searches;
     for (ssize_t at = last[data[pos]]; at != npos; at = prev[at]) {
       if (matches(pattern,pos-at,data,begin,end)) {
 	return pos - at;
@@ -119,12 +122,12 @@ struct Finder {
     if (end-begin < n) {
       return npos;
     }
-    ssize_t pos = (begin+end)/2;
-    size_t ans = recurse(begin,pos);
+    ssize_t middle = (begin+end)/2;
+    size_t ans = recurse(begin,middle);
     if (ans != npos) return ans;
-    ans = search(begin,end,pos);
+    ans = search(begin,end,middle);
     if (ans != npos) return ans;    
-    return recurse(pos+1,end);
+    return recurse(middle+1,end);
   }
 };
   
